@@ -14,12 +14,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Loic\\ApiClientBundle\\": "src/Geny/ApiClientBundle/"
+            "Geny\\ApiClientBundle\\": "src/Geny/ApiClientBundle/"
         }
     },
 
     "autoload-dev": {
-        "psr-4": { "Loic\\ApiClientBundle\\Tests\\": "Tests/" }
+        "psr-4": { "Geny\\ApiClientBundle\\Tests\\": "Tests/" }
     },
 
     "require": {
