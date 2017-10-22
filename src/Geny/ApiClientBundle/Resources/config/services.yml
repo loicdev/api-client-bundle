@@ -1,0 +1,23 @@
+services:
+
+#    predisHandler
+    gs.predis.handler:
+        class: Geny\ApiClientBundle\StackHandler\CacheHandler
+        factory: ['Geny\ApiClientBundle\StackHandler\CacheHandler', predisHandler]
+        tags:
+            -  { name: 'stack.handler'}
+
+#   Api Client DataCollector
+    api_client_data_collector:
+        class:  Geny\ApiClientBundle\DataCollector\ApiClientDataCollector
+        tags:
+            - { name: data_collector, template: 'GenyApiClientBundle:Collector:debug.html.twig', id: 'api_client_data_collector'}
+            - { name: kernel.event_listener, event: gs.guzzlehttp , method: onGuzzleHttpCommand }
+
+#   Guzzle Logger
+
+    guzzle.logger:
+        public: false
+        class: Geny\ApiClientBundle\StackHandler\LogHandler
+        arguments: ['@logger', '@guzzle.message_formatter']
+        factory: [GuzzleHttp\Middleware, log]

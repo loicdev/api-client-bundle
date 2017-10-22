@@ -1,0 +1,38 @@
+{
+    "name": "geny/api-client-bundle",
+    "description": "api client bundle for Geny",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [ "geny", "geny-api-client", "api-client" ],
+    "homepage": "https://bitbucket.org/paristurf/api-client-bundle",
+    "authors": [
+      {
+        "name": "Geny Team",
+        "homepage": "https://bitbucket.org/paristurf/profile/members",
+        "email": "support@paris-turf.com"
+      }
+    ],
+    "repositories": [
+      { "type": "composer", "url": "http://bundles.paris-turf.net/vendors" },
+      { "type": "composer", "url": "http://bundles.paris-turf.net" }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Geny\\ApiClientBundle\\": "src/Geny/ApiClientBundle/"
+        }
+    },
+
+    "autoload-dev": {
+        "psr-4": { "Geny\\ApiClientBundle\\Tests\\": "Tests/" }
+    },
+
+    "require": {
+        "symfony/symfony": "3.*",
+        "guzzlehttp/guzzle": "~6.0",
+        "predis/predis": "^1.1",
+        "kevinrob/guzzle-cache-middleware": "^1.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "5.1.*"
+    }
+}
