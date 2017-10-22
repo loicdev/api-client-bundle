@@ -7,7 +7,6 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-
 /**
  * Class GuzzleEvent
  * @package Geny\ApiClientBundle\EventDispatcher

@@ -4,8 +4,12 @@ namespace Geny\ApiClientBundle\DependencyInjection;
 
 use Geny\ApiClientBundle\Http\Rest\RestApiClientBridge;
 use Geny\ApiClientBundle\StackHandler\CacheHandler;
+use Geny\ApiClientBundle\StackHandler\CurlFactory;
+use Geny\ApiClientBundle\StackHandler\CurlHandler;
+use Geny\ApiClientBundle\StackHandler\CurlMultiHandler;
 use Geny\ApiClientBundle\StackHandler\LogHandler;
 use GuzzleHttp\Client;
+use GuzzleHttp\Handler\Proxy;
 use GuzzleHttp\HandlerStack;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -34,9 +38,12 @@ class GenyApiClientExtension extends Extension
         $loader->load('services.yml');
 
         foreach ($config['api'] as $apiName => $apiConfiguration) {
+            $this->setGuzzleProxyHandler($container, $apiName, $config['api'][$apiName]);
+
 
             $handlerStackDefinition = new Definition(HandlerStack::class);
             $handlerStackDefinition->setFactory([HandlerStack::class, 'create']);
+            $handlerStackDefinition->setArguments([new Reference('geny.guzzle.proxyhandler_'.$apiName)]);
 
             $container->setDefinition('guzzlehttp.guzzle.handlerstack.'.$apiName, $handlerStackDefinition);
 
@@ -69,29 +76,6 @@ class GenyApiClientExtension extends Extension
                 $config['middleware'][] = new Reference('gs.monolog_handler' . $apiName);
             }
 
-            // Handler Redis for Guzzle
-            $redis = array();
-            if (isset($apiConfiguration['redis']) && $apiConfiguration['redis']['client'] && $apiConfiguration['redis']['port'])
-            {
-
-                $predisHandlerDefinition = new Definition(CacheHandler::class);
-                $predisHandlerDefinition->setFactory(array(
-                    CacheHandler::class,
-                    'predisHandler'
-                ));
-
-                $container->setDefinition('gs.predis_handler.'.$apiName, $predisHandlerDefinition);
-
-                $predisHandlerDefinition->setArguments(array(
-                    $handlerStackReference,
-                    $apiConfiguration['redis']['client'],
-                    $apiConfiguration['redis']['port'],
-                    $apiConfiguration['redis']['cache'],
-                ));
-
-                $config['handler'] = new Reference('gs.predis_handler.'.$apiName);
-
-            }
 
             // Create a  guzzle service client by api parameter
             $guzzleServiceId = sprintf('guzzle.%s',$apiName);
@@ -112,7 +96,6 @@ class GenyApiClientExtension extends Extension
 
             //Guzzle service cannot be available from container
             $definition->setPublic(true);
-            $definition->addTag('guzzle.ws',$redis);
 
             $container->setDefinition($guzzleServiceId,$definition);
 
@@ -123,5 +106,59 @@ class GenyApiClientExtension extends Extension
             ));
 
         }
+    }
+
+    /**
+     * Set proxy handler definition for the client
+     *
+     * @param ContainerBuilder $container
+     * @param string           $clientId
+     * @param array            $config
+     */
+    protected function setGuzzleProxyHandler(ContainerBuilder $container, $clientId, array $config)
+    {
+        // arguments (3 and 50) in handler factories below represents the maximum number of idle handles.
+        // the values are the default defined in guzzle CurlHanddler and CurlMultiHandler
+        $handlerFactorySync = new Definition(CurlFactory::class);
+        $handlerFactorySync->setArguments([3]);
+
+        $handlerFactoryNormal = new Definition(CurlFactory::class);
+        $handlerFactoryNormal->setArguments([50]);
+
+        $curlhandler = new Definition(CurlHandler::class);
+        $curlhandler->setArguments([ ['handle_factory' => $handlerFactorySync] ]);
+        $curlhandler->addMethodCall('setDebug', [$container->getParameter('kernel.debug')]);
+
+        $curlMultihandler = new Definition(CurlMultiHandler::class);
+        $curlMultihandler->setArguments([ ['handle_factory' => $handlerFactoryNormal] ]);
+        $curlMultihandler->addMethodCall('setDebug', [$container->getParameter('kernel.debug')]);
+
+        if (array_key_exists('cache', $config)) {
+            $defaultTtl = $config['cache']['ttl'];
+            if (is_null($cacheService = $this->getServiceReference($container, $config['cache']['service']))) {
+                throw new \InvalidArgumentException(sprintf(
+                    '"cache.service" requires a valid service reference, "%s" given',
+                    $config['cache']['service']
+                ));
+            }
+
+            $curlhandler->addMethodCall('setCache', [$cacheService, $defaultTtl]);
+            $curlMultihandler->addMethodCall('setCache', [$cacheService, $defaultTtl]);
+        }
+
+        $proxyHandler = new Definition(Proxy::class);
+        $proxyHandler->setFactory([Proxy::class, 'wrapSync']);
+        $proxyHandler->setArguments([$curlMultihandler, $curlhandler]);
+
+        $container->setDefinition('geny.guzzle.proxyhandler_'.$clientId, $proxyHandler);
+    }
+
+    protected function getServiceReference(ContainerBuilder $container, $id)
+    {
+        if (substr($id, 0, 1) == '@') {
+            return new Reference(substr($id, 1));
+        }
+
+        return null;
     }
 }

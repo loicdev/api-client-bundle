@@ -37,8 +37,7 @@ class RestApiClientBridge  implements RestApiClientInterface{
      */
     public function get($url, $headers = array())
     {
-        $request  = new Request('GET', $url, $headers);
-        $response = $this->client->send($request);
+        $response = $this->client->request('GET', $url , $headers);
 
         return $response;
     }
