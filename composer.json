@@ -4,26 +4,22 @@
     "type": "symfony-bundle",
     "license": "MIT",
     "keywords": [ "geny", "geny-api-client", "api-client" ],
-    "homepage": "https://bitbucket.org/paristurf/api-client-bundle",
+    "homepage": "https://github.com/loicdev/api-client-bundle",
     "authors": [
       {
-        "name": "Geny Team",
-        "homepage": "https://bitbucket.org/paristurf/profile/members",
-        "email": "support@paris-turf.com"
+        "name": "Loic",
+        "homepage": "https://github.com/loicdev",
+        "email": "loic.pierreelies@gmail.com",
       }
-    ],
-    "repositories": [
-      { "type": "composer", "url": "http://bundles.paris-turf.net/vendors" },
-      { "type": "composer", "url": "http://bundles.paris-turf.net" }
     ],
     "autoload": {
         "psr-4": {
-            "Geny\\ApiClientBundle\\": "src/Geny/ApiClientBundle/"
+            "Loic\\ApiClientBundle\\": "src/Geny/ApiClientBundle/"
         }
     },
 
     "autoload-dev": {
-        "psr-4": { "Geny\\ApiClientBundle\\Tests\\": "Tests/" }
+        "psr-4": { "Loic\\ApiClientBundle\\Tests\\": "Tests/" }
     },
 
     "require": {
