@@ -135,6 +135,9 @@ class GenyApiClientExtension extends Extension
 
         if (array_key_exists('cache', $config)) {
             $defaultTtl = $config['cache']['ttl'];
+            $headerTtl = $config['cache']['use_header_ttl'];
+            $cacheServerErrors = $config['cache']['cache_server_errors'];
+            $cacheClientErrors = $config['cache']['cache_client_errors'];
             if (is_null($cacheService = $this->getServiceReference($container, $config['cache']['service']))) {
                 throw new \InvalidArgumentException(sprintf(
                     '"cache.service" requires a valid service reference, "%s" given',
@@ -142,8 +145,8 @@ class GenyApiClientExtension extends Extension
                 ));
             }
 
-            $curlhandler->addMethodCall('setCache', [$cacheService, $defaultTtl]);
-            $curlMultihandler->addMethodCall('setCache', [$cacheService, $defaultTtl]);
+            $curlhandler->addMethodCall('setCache', [$cacheService, $defaultTtl, $headerTtl, $cacheServerErrors, $cacheClientErrors]);
+            $curlMultihandler->addMethodCall('setCache', [$cacheService, $defaultTtl, $headerTtl, $cacheServerErrors, $cacheClientErrors]);
         }
 
         $proxyHandler = new Definition(Proxy::class);

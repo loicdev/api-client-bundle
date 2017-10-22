@@ -54,10 +54,13 @@ trait CacheTrait
      * @param boolean        $cacheServerErrors
      * @param boolean        $cacheClientErrors
      */
-    public function setCache(CacheInterface $cache, $defaultTtl)
+    public function setCache(CacheInterface $cache, $defaultTtl, $useHeaderTtl, $cacheServerErrors = true, $cacheClientErrors = true)
     {
         $this->cache = $cache;
         $this->defaultTtl = $defaultTtl;
+        $this->useHeaderTtl = $useHeaderTtl;
+        $this->cacheServerErrors = $cacheServerErrors;
+        $this->cacheClientErrors = $cacheClientErrors;
     }
 
     /**
@@ -181,6 +184,7 @@ trait CacheTrait
             return null;
         }
 
+
         $cached = unserialize($cachedContent);
         foreach ($cached as $value) {
             if (is_null($value)) {
@@ -200,6 +204,7 @@ trait CacheTrait
 
 
         return $response;
+
     }
 
 
@@ -231,15 +236,18 @@ trait CacheTrait
 
         // no response in cache so we ask parent for response
         $result = parent::__invoke($request, $options);
+
         // then ask promise to cache the response when she's resolved
         $result->then(function (ResponseInterface $response) use ($request, $options) {
             //check if user want a specific cache duration
             $ttl = (!empty($options['cache_ttl'])) ? $options['cache_ttl'] : null;
 
-            $this->cacheResponse($request, $response, $ttl);
+            return $this->cacheResponse($request, $response, $ttl);
         });
 
+
         return $result;
+
     }
 
     /**
